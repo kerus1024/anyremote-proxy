@@ -16,7 +16,9 @@ server.listen(ServerConstants.LISTENPORT, ServerConstants.LISTENIP, () => {
   console.log('server listening to %j', server.address());  
 });
 
-async function handleConnection(localsocket) {    
+async function handleConnection(localsocket) {  
+  
+  localsocket.setNoDelay(true);
 
   const PAD = 'KERUSPROXYPAD\r\n';
 
@@ -38,9 +40,10 @@ async function handleConnection(localsocket) {
   });
 
   remotesocket.on('connect', (data) => {
+    remotesocket.setNoDelay(true);
     Logger('ProxyConnection generated!');
     initialProxy = true;
-    //remotesocket.write(initBuffer);
+    remotesocket.write(initBuffer);
 
     Logger(`initBufferSize : `, Buffer.byteLength(initBuffer));
 

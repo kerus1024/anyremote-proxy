@@ -115,6 +115,8 @@ async function routeGeoRemote(ip) {
 
 async function handleConnection(localsocket) {    
 
+  localsocket.setNoDelay(true);
+
   const clientIP = localsocket.remoteAddress;
   const clientPort = localsocket.remotePort;
 
@@ -129,7 +131,7 @@ async function handleConnection(localsocket) {
     console.log(`CONNECT ${clientIP}:${clientPort} -> ${resolve.originIP}:${resolve.originPort} via ${getGeo.remoteServer}`);
 
     let remotesocket = new net.Socket();
-
+    
     let initialProxy = false;
     let initBuffer = Buffer.alloc(0);
 
@@ -152,6 +154,7 @@ async function handleConnection(localsocket) {
     });
 
     remotesocket.on('connect', (data) => {
+      remotesocket.setNoDelay(true);
       //remotesocket.write(`KERUSPROXY ${resolve.originIP} ${resolve.originPort} KERUSPROXYPAD\r\n`);
       if (Buffer.byteLength(initBuffer)) {
         remotesocket.write(initBuffer);
