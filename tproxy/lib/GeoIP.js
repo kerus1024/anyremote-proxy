@@ -11,6 +11,45 @@ function ipTo24prefix(ip) {
 
 class GeoIPReader {
 
+  static async routeGeoRemote(ip) {
+
+    const startTime = new Date().getTime();
+  
+    return new Promise(async  (resolve, reject) => {
+  
+      let country = 'ZZ';
+  
+      try {
+        country = await GeoIPReader.lookup(ip);
+      } catch (e) {
+        country = 'ZZ';
+        console.error(e);
+      } finally {
+        
+        let selectRemote = geoconfig.gw;
+  
+        Object.keys(geoconfig.geoCountry).forEach(rproxyIP => {
+          geoconfig.geoCountry[rproxyIP].forEach(countryCode => {
+            if (country === countryCode) {
+              selectRemote = rproxyIP;
+            }
+          });
+        });
+    
+        //console.log('GeoIP Lookup Time : ' + (new Date().getTime() - startTime) + 'ms');
+  
+        resolve({
+          country: country,
+          remoteServer: selectRemote
+        });
+  
+      }
+  
+    });
+  
+  }
+  
+
   static async lookup(ip) {
     return new Promise(async(resolve, reject) => {
       
