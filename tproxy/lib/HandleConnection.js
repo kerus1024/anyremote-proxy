@@ -90,20 +90,25 @@ class HandleConnection {
       this.remotesocket.resume();
     });
 
-    this.localsocket.on('close', (had_error) => {
-      this.remotesocket.end();
+    this.localsocket.on('close', () => {
+      this.localsocket.destroy();
+      if (this.remotesocket) {
+        this.remotesocket.destroy();
+      }
     });
 
     this.localsocket.on('error', (err) => {
       console.error(err);
-      this.remotesocket.destroy();
+      if (this.remotesocket) {
+        this.remotesocket.destroy();
+      }
     });
 
   }
 
   async buildRemoteEvent() {
 
-    this.remotesocket.on('connect', (data) => {
+    this.remotesocket.on('connect', () => {
       this.remotesocket.setNoDelay(true);
 
       if (Buffer.byteLength(this.initBuffer)) {

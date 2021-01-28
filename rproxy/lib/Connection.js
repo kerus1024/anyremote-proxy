@@ -67,6 +67,7 @@ class Connection {
   
         this.remotesocket = new net.Socket();
         this.remotesocket.connect(tcpConnectionOptions);
+        this.remotesocket.setNoDelay(true);
 
         this.buildRemoteEvent();
   
@@ -125,7 +126,7 @@ class Connection {
 
   buildRemoteEvent() {
     this.remotesocket.on('connect', (data) => {
-      this.remotesocket.setNoDelay(true);
+      //this.remotesocket.setNoDelay(true);
       this.initialProxy = true;
 
       if (Buffer.byteLength(this.initBuffer)) {
