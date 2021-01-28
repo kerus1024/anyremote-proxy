@@ -1,6 +1,7 @@
 const net = require('net');
 
 const geoconfig = require(`${process.cwd()}/geoconfig.json`);
+const ServerConstants = require(`${process.cwd()}/config.json`);
 const GeoIP = require('./GeoIP');
 const Conntrack = require('./Conntrack');
 
@@ -51,7 +52,7 @@ class HandleConnection {
       const tcpConnectionOptions = {
         port: this.targetGeoRemotePort,
         host: this.targetGeoRemoteServer,
-        //localAddress: ServerConstants.PROXYLOCAL,
+        localAddress: ServerConstants.PROXYLOCAL,
         family: 4,
       }
 
@@ -94,6 +95,7 @@ class HandleConnection {
     });
 
     this.localsocket.on('error', (err) => {
+      console.error(err);
       this.remotesocket.destroy();
     });
 
@@ -122,10 +124,11 @@ class HandleConnection {
     });
 
     this.remotesocket.on('close', (had_error) => {
-      this.localsocket.end();
+      this.localsocket.destroy();
     });
 
     this.remotesocket.on('error', (err) => {
+      console.error(err);
       this.localsocket.destroy();
     });
 

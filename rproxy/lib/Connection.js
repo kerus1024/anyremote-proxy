@@ -1,8 +1,10 @@
+const ServerConstants = require(`${process.cwd()}/config.json`);
+
 const net = require('net');
 
 class Connection {
 
-  constructor(localsocket) {
+  constructor(localsocket, connectionList, connectionID) {
 
     // client가 tproxy서버이기 때문
     this.proxyIP            = localsocket.remoteAddress;
@@ -17,6 +19,9 @@ class Connection {
     this.initialParseProxy  = false;
     this.initialProxy       = false;
     this.initBuffer         = Buffer.alloc(0);
+
+    this.connectionList = connectionList;
+    this.connectionID = connectionID;
 
     this.localsocket.setNoDelay(true);
 
@@ -58,7 +63,7 @@ class Connection {
           family: 4,
         }
   
-        //console.log(`NEW PROXY CONNECT! -> ${this.targetIP}:${this.targetPort}`)
+        console.log(`NEW PROXY CONNECT! -> ${this.targetIP}:${this.targetPort}`)
   
         this.remotesocket = new net.Socket();
         this.remotesocket.connect(tcpConnectionOptions);
@@ -68,9 +73,23 @@ class Connection {
         // write를 먼저 거는게 연결이 더 빠른듯한..
         // initBuffer = Buffer.concat([initBuffer, requestRight]);
         // remotesocket.write(requestRight);
-        this.remotesocket.write(requestRight);
+
+        const currentBufferSize = Buffer.byteLength(requestRight); 
+
+        // TCP bypass DPI
+        const baseLength = 21;
+
+        if (ServerConstants.BYPASSDPI && currentBufferSize >= baseLength) {
+          const sliceLeft = requestRight.slice(0, baseLength);
+          const sliceRight = requestRight.slice(baseLength, currentBufferSize);
+          this.remotesocket.write(sliceLeft);
+          this.remotesocket.write(sliceRight);
+        } else {
+          this.remotesocket.write(requestRight);
+        }
 
         this.initialParseProxy = true;
+
       } else if (!this.initialProxy) {
         this.initBuffer = Buffer.concat([this.initBuffer, data]);
       } else {
@@ -86,12 +105,20 @@ class Connection {
       this.remotesocket.resume();
     });
 
-    this.localsocket.on('close', (had_error) => {
-      this.remotesocket.end();
+    this.localsocket.on('close', () => {
+      this.localsocket.destroy();
+      this.remotesocket.destroy();
+      if (typeof this.connectionList[this.connectionID] !== "undefined") {
+        delete this.connectionList[this.connectionID];
+      }
     });
 
     this.localsocket.on('error', (err) => {
+      this.localsocket.destroy();
       this.remotesocket.destroy();
+      if (typeof this.connectionList[this.connectionID] !== "undefined") {
+        delete this.connectionList[this.connectionID];
+      }
     });
 
   }
@@ -103,7 +130,9 @@ class Connection {
 
       if (Buffer.byteLength(this.initBuffer)) {
         this.remotesocket.write(this.initBuffer);
+        this.initBuffer = null;
       }
+
     });
 
     this.remotesocket.on('data', (data) => {
@@ -117,14 +146,21 @@ class Connection {
       this.localsocket.resume();
     });
 
-    this.remotesocket.on('close', (had_error) => {
-      this.localsocket.end();
+    this.remotesocket.on('close', () => {
+      this.localsocket.destroy();
+      this.remotesocket.destroy();
+      if (typeof this.connectionList[this.connectionID] !== "undefined") {
+        delete this.connectionList[this.connectionID];
+      }
     });
 
     this.remotesocket.on('error', (err) => {
       this.localsocket.destroy();
+      this.remotesocket.destroy();
+      if (typeof this.connectionList[this.connectionID] !== "undefined") {
+        delete this.connectionList[this.connectionID];
+      }
     });
-
 
   }
 

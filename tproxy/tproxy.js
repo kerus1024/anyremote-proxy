@@ -3,7 +3,7 @@ process.title = 'tproxy-server-anyremote';
 const net = require('net');
 const server = net.createServer();    
 
-const ServerConstants = require('./config.json');
+const ServerConstants = require(`${process.cwd()}/config.json`);
 const HandleConnection = require('./lib/HandleConnection');
 
 process.on('uncaughtException', (error) => {

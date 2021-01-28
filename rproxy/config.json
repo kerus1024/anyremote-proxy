@@ -1,5 +1,5 @@
 {
     "LISTENIP": "10.50.0.1",
     "LISTENPORT": 2002,
-    "PROXYLOCAL": "192.168.0.2"
+    "BYPASSDPI": true
 }

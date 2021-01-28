@@ -10,8 +10,12 @@ process.on('uncaughtException', (error) => {
   console.error(error);
 });
   
+const ConnectionList = {};
+let connectionID = 0;
+
 server.on('connection', (localsocket) => {
-  const connectionPipe = new Connection(localsocket);
+  ConnectionList[connectionID] = new Connection(localsocket, ConnectionList, connectionID);
+  connectionID++;
 });
 
 server.listen(ServerConstants.LISTENPORT, ServerConstants.LISTENIP, () => {    

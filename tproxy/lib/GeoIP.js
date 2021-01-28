@@ -1,6 +1,7 @@
 const Reader          = require('@maxmind/geoip2-node').Reader;
 const geoconfig       = require(`${process.cwd()}/geoconfig.json`);
 const CIDR            = require('./CIDR');
+const fs = require('fs');
 const cacheKV = {};
 
 function ipTo24prefix(ip) {
@@ -89,7 +90,8 @@ class GeoIPReader {
             
       try {
 
-        const reading  = await Reader.open('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+        const dbBuffer = fs.readFileSync('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+        const reading = Reader.openBuffer(dbBuffer);
         const response = reading.country(ip);
         const country = response.country.isoCode;
             
