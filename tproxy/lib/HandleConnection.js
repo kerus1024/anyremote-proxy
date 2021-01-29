@@ -4,10 +4,17 @@ const geoconfig = require(`${process.cwd()}/geoconfig.json`);
 const ServerConstants = require(`${process.cwd()}/config.json`);
 const GeoIP = require('./GeoIP');
 const Conntrack = require('./Conntrack');
+const SNIFilter = require('./SNIFilter');
+const { filter } = require('./SNIFilter');
 
 class HandleConnection {
 
   constructor(localsocket) {
+
+
+    if (localsocket.destroyed || typeof localsocket.remoteAddress === 'undefined') {
+      return;
+    }
 
     this.clientIP           = localsocket.remoteAddress;
     this.clientPort         = localsocket.remotePort;
@@ -27,6 +34,8 @@ class HandleConnection {
     this.initBuffer         = Buffer.alloc(0);
   
     this.localsocket.setNoDelay(true);
+
+    this.readyConnect = false;
 
     (async() => {
       this.initConnection();
@@ -49,6 +58,18 @@ class HandleConnection {
 
       this.remotesocket = new net.Socket();
 
+      // initBuffer가 없으면 동작하지 않는다..
+      if (this.targetPort === 443 && ServerConstants.SNIFILTER && Buffer.byteLength(this.initBuffer)) {
+        const filterResult = await SNIFilter.filter(this.initBuffer);
+
+        if (filterResult.filter) {
+          this.targetGeoCountry = filterResult.geoRemote.country;
+          this.targetGeoRemoteServer = filterResult.geoRemote.remoteServer;
+          console.log(`SNIFilter>${filterResult.serverName} ---> [${this.targetGeoCountry}]`);
+        }
+
+      }
+
       const tcpConnectionOptions = {
         port: this.targetGeoRemotePort,
         host: this.targetGeoRemoteServer,
@@ -59,7 +80,8 @@ class HandleConnection {
       console.log(`NEW PROXY CONNECT - ${this.clientIP}:${this.clientPort} -> ${this.targetIP}:${this.targetPort} [${this.targetGeoRemoteServer} (${this.targetGeoCountry})]`);
 
       this.remotesocket.connect(tcpConnectionOptions);
-      this.remotesocket.write(`KERUSPROXY ${resolve.originIP} ${resolve.originPort} KERUSPROXYPAD\r\n`);
+      this.remotesocket.write(`KERUSPROXY ${this.targetIP} ${this.targetPort} KERUSPROXYPAD\r\n`);
+      this.readyConnect = true;
 
       this.buildRemoteEvent();
 
@@ -74,9 +96,8 @@ class HandleConnection {
 
     this.localsocket.on('data', (data) => {
 
-      if (!this.initialProxy) {
+      if (!this.initialProxy && !this.readyConnect) {
         this.initBuffer = Buffer.concat([this.initBuffer, data]);
-        return;
       } else {
         let flushed = this.remotesocket.write(data);
         if (!flushed) {

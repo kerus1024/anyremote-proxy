@@ -50,7 +50,6 @@ class GeoIPReader {
   
   }
   
-
   static async lookup(ip) {
     return new Promise(async(resolve, reject) => {
       

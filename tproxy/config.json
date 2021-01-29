@@ -1,5 +1,6 @@
 {
     "LISTENIP": "10.50.0.1",
     "LISTENPORT": 2001,
-    "PROXYLOCAL": "10.50.0.1"
+    "PROXYLOCAL": "10.50.0.1",
+    "SNIFILTER": true
 }

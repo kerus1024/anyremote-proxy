@@ -22,7 +22,7 @@ class Conntrack {
       });
   
       ch.stderr.on('data', data => {
-        chunks_err + data;
+        chunks_err += data;
       });
   
       ch.on('close', (code, signal) => {
@@ -42,17 +42,18 @@ class Conntrack {
             const metas = result.conntrack.flow[0].meta[0];
           
             const originIP = metas.layer3[0].dst[0];
-            const originPort = metas.layer4[0].dport[0];
+            const originPort = parseInt(metas.layer4[0].dport[0]);
     
             //console.log(`GetOriginDestination: ${clientIP}:${clientPort} -> ${originIP}:${originPort}`);
     
             resolve({
               originIP: originIP,
-              originPort: originPort
+              originPort: parseInt(originPort)
             });
 
           } catch (e) {
             console.error('ERROR: unknown conntrack data');
+            console.error('ERRCMD:', cmds.join(' '));
             console.error('STDERR:', chunks_err);
             reject();
           }
