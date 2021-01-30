@@ -50,7 +50,7 @@ class SNIFilter {
   }
 
   static readSNIHostname(buffer) {
-
+    
     //console.log('Read SNI');
 
     let pos = 0;
@@ -88,13 +88,14 @@ class SNIFilter {
     pos += compressionModeLength;
 
     // Extension Length
-    const extensionLength = buffer[++pos] * 0x1FF + buffer[++pos];
+    const extensionLength = buffer[++pos] * 0x100 + buffer[++pos];
 
     for (let i = pos; (i || pos) < Buffer.byteLength(buffer); i++) {
 
       // Extension ServerName
       // Server Name
-      if (buffer[++pos] === 0x00 && buffer[++pos] === 0x00) {
+      if (buffer[pos + 1] === 0x00 && buffer[pos + 2] === 0x00) {
+        pos += 2;        
 
         // ServerName Extension Length
         pos += 2;
@@ -112,15 +113,18 @@ class SNIFilter {
 
         const serverNameLength = buffer[pos];
         const serverName = buffer.slice(++pos, pos + serverNameLength);
-        console.log('SNI: Server-Name', serverName.toString());
+        console.log('SNI:Server-Name:', serverName.toString());
         return serverName.toString();
 
+      } else {
+        pos += 2;
+
+        // Skip Extension 
+        const skipLength = buffer[++pos] * 0x1FF + buffer[++pos];
+
+        pos += skipLength;
+
       }
-
-      // Skip Extension
-      const skipLength = buffer[++pos] * 0x1FF + buffer[++pos];
-
-      pos += skipLength;
 
     }
 
@@ -137,7 +141,7 @@ class SNIFilter {
     f['.?facebook.com$'] = 'JP';
     f['.?fbcdn.net$'] = 'JP';
     
-    f['.?pstatic.net'] = 'KR';
+    f['.?pstatic.net$'] = 'KR';
 
   }
 
