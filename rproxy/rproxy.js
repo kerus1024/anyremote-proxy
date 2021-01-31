@@ -2,14 +2,14 @@ process.title = 'rproxy-server-anyremote';
 
 const ServerConstants = require('./config.json');
 const Connection = require('./lib/Connection');
-
-const net = require('net');
-const server = net.createServer();
+const Nice = require('./lib/Nice');
 
 process.on('uncaughtException', (error) => {
   console.error(error);
 });
   
+const net = require('net');
+const server = net.createServer();
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 
@@ -17,7 +17,7 @@ if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
   // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
+  for (let i = 0; i < numCPUs * 2; i++) {
     cluster.fork();
   }
 
@@ -26,6 +26,9 @@ if (cluster.isMaster) {
   });
 
 } else {
+
+  Nice.Nice();
+
   const ConnectionList = {};
   let connectionID = 0;
 

@@ -2,6 +2,7 @@ process.title = 'tproxy-server-anyremote';
 
 const ServerConstants = require(`${process.cwd()}/config.json`);
 const HandleConnection = require('./lib/HandleConnection');
+const Nice = require('./lib/Nice');
 
 process.on('uncaughtException', (error) => {
   console.error(error);
@@ -16,7 +17,7 @@ if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
   // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
+  for (let i = 0; i < numCPUs * 2; i++) {
     cluster.fork();
   }
 
@@ -25,6 +26,8 @@ if (cluster.isMaster) {
   });
 
 } else {
+
+  Nice.Nice();
 
   server.on('connection', (localsocket) => {
     const connectionPipe = new HandleConnection(localsocket);
