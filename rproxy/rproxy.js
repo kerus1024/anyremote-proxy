@@ -10,14 +10,31 @@ process.on('uncaughtException', (error) => {
   console.error(error);
 });
   
-const ConnectionList = {};
-let connectionID = 0;
+const cluster = require('cluster');
+const numCPUs = require('os').cpus().length;
 
-server.on('connection', (localsocket) => {
-  ConnectionList[connectionID] = new Connection(localsocket, ConnectionList, connectionID);
-  connectionID++;
-});
+if (cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
 
-server.listen(ServerConstants.LISTENPORT, ServerConstants.LISTENIP, () => {    
-  console.log('server listening to %j', server.address());  
-});
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+  });
+
+} else {
+  const ConnectionList = {};
+  let connectionID = 0;
+
+  server.on('connection', (localsocket) => {
+    ConnectionList[connectionID] = new Connection(localsocket, ConnectionList, connectionID);
+    connectionID++;
+  });
+
+  server.listen(ServerConstants.LISTENPORT, ServerConstants.LISTENIP, () => {    
+    console.log('server listening to %j', server.address());  
+  });
+}
