@@ -96,8 +96,10 @@ class HandleConnection {
 
     this.localsocket.on('data', (data) => {
 
-      if (!this.initialProxy && !this.readyConnect) {
+      if (!this.readyConnect && !this.remotesocket) {
         this.initBuffer = Buffer.concat([this.initBuffer, data]);
+      } else if (!this.initialProxy) {
+        this.remotesocket.write(data);
       } else {
         let flushed = this.remotesocket.write(data);
         if (!flushed) {
@@ -134,6 +136,7 @@ class HandleConnection {
 
       if (Buffer.byteLength(this.initBuffer)) {
         this.remotesocket.write(this.initBuffer);
+        this.initBuffer = Buffer.alloc(0);
       }
       this.initialProxy = true;
     });

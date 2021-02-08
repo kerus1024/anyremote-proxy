@@ -1,14 +1,8 @@
 const Reader          = require('@maxmind/geoip2-node').Reader;
 const geoconfig       = require(`${process.cwd()}/geoconfig.json`);
 const CIDR            = require('./CIDR');
+const Cache           = require('./Cache');
 const fs = require('fs');
-const cacheKV = {};
-
-function ipTo24prefix(ip) {
-  const ipArray = ip.split('.');
-  ipArray[3] = '0';
-  return ipArray.join('.');
-}
 
 class GeoIPReader {
 
@@ -16,7 +10,7 @@ class GeoIPReader {
 
     const startTime = new Date().getTime();
   
-    return new Promise(async  (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
   
       let country = 'ZZ';
   
@@ -53,14 +47,13 @@ class GeoIPReader {
   static async lookup(ip) {
     return new Promise(async(resolve, reject) => {
       
-      if (cacheKV[ipTo24prefix(ip)]) {
-        return resolve(cacheKV[ipTo24prefix(ip)]);
+      if (Cache.retrieveGeoIP(ip)) {
+        return resolve(Cache.retrieveGeoIP(ip));
       }
-
 
       const checkCustomRoutes = GeoIPReader.checkCustomRoutes(ip);
       if (checkCustomRoutes) {
-        cacheKV[ipTo24prefix(ip)] = checkCustomRoutes;
+        Cache.addGeoIPCache(ip, checkCustomRoutes);
         return resolve(checkCustomRoutes);
       }
 
@@ -94,13 +87,13 @@ class GeoIPReader {
         const response = reading.country(ip);
         const country = response.country.isoCode;
             
-        cacheKV[ipTo24prefix(ip)] = country;
+        Cache.addGeoIPCache(ip, country);
         resolve(country);
 
       } catch (e) {
         console.error('GEOIP: Couldnt resolve geoip', e);
         resolve('ZZ');
-        cacheKV[ipTo24prefix(ip)] = 'ZZ';
+        Cache.addGeoIPCache(ip, 'ZZ');
       } finally {
         //if (cacheKV.length > 5000000) cacheKV = {};
       }

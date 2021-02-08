@@ -136,12 +136,26 @@ class SNIFilter {
 
     const f = SNIFilter.filters;
 
-    f['.?twitter.com$'] = 'JP';
-    f['.?twimg.com$'] = 'JP';
-    f['.?facebook.com$'] = 'JP';
-    f['.?fbcdn.net$'] = 'JP';
+    // Twitter, Facebook
+    f['^([^]+\.)?twitter.com$'] = 'JP';
+    f['^([^]+\.)?t.co$'] = 'JP';
+    f['^([^]+\.)?twimg.com$'] = 'JP';
+    f['^([^]+\.)?facebook.com$'] = 'JP';
+    f['^([^]+\.)?fbcdn.net$'] = 'JP';
     
-    f['.?pstatic.net$'] = 'KR';
+    // 네이버
+    f['^([^]+\.)?pstatic.net$'] = 'KR';
+
+    // 넷플릭스
+    const netflixCountry = 'KR';
+    f['^([^]+\.)?netflix.com$'] = netflixCountry;
+    f['^([^]+\.)?fast.com$'] =  netflixCountry;
+    f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
+    f['^([^]+\.)?nflximg.net$'] =  netflixCountry;
+    f['^([^]+\.)?nflxext.com$'] =  netflixCountry;
+    f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
+    f['^([^]+\.)?nflxso.net$'] = netflixCountry;
+    
 
   }
 

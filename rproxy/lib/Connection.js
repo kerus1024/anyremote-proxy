@@ -69,8 +69,6 @@ class Connection {
         this.remotesocket.connect(tcpConnectionOptions);
         this.remotesocket.setNoDelay(true);
 
-        this.buildRemoteEvent();
-  
         // write를 먼저 거는게 연결이 더 빠른듯한..
         // initBuffer = Buffer.concat([initBuffer, requestRight]);
         // remotesocket.write(requestRight);
@@ -91,13 +89,12 @@ class Connection {
 
         this.initialParseProxy = true;
 
-      } else if (!this.initialProxy) {
+        this.buildRemoteEvent();
+
+      } else if (!this.initialProxy && !this.remotesocket) {
         this.initBuffer = Buffer.concat([this.initBuffer, data]);
       } else {
-        let flushed = this.remotesocket.write(data);
-        if (!flushed) {
-          this.localsocket.pause();
-        }
+        this.remotesocket.write(data);
       }
   
     });
@@ -126,7 +123,7 @@ class Connection {
 
   buildRemoteEvent() {
     this.remotesocket.on('connect', (data) => {
-      //this.remotesocket.setNoDelay(true);
+      this.remotesocket.setNoDelay(true);
       this.initialProxy = true;
 
       if (Buffer.byteLength(this.initBuffer)) {

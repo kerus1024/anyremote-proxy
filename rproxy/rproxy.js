@@ -16,6 +16,8 @@ const numCPUs = require('os').cpus().length;
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
+  Nice.Nice();
+
   // Fork workers.
   for (let i = 0; i < numCPUs * 2; i++) {
     cluster.fork();
