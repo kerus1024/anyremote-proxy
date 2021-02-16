@@ -33,7 +33,7 @@ class HandleConnection {
     this.initialProxy       = false;
     this.initBuffer         = Buffer.alloc(0);
   
-    this.localsocket.setNoDelay(true);
+    //this.localsocket.setNoDelay(true);
 
     this.readyConnect = false;
 
@@ -87,7 +87,7 @@ class HandleConnection {
 
     } catch (e) {
       console.error(e);
-      this.localsocket.destroy();
+      this.localsocket.end();
     }
 
   }
@@ -96,10 +96,8 @@ class HandleConnection {
 
     this.localsocket.on('data', (data) => {
 
-      if (!this.readyConnect && !this.remotesocket) {
+      if (!this.readyConnect || !this.initialProxy) {
         this.initBuffer = Buffer.concat([this.initBuffer, data]);
-      } else if (!this.initialProxy) {
-        this.remotesocket.write(data);
       } else {
         let flushed = this.remotesocket.write(data);
         if (!flushed) {
@@ -114,16 +112,16 @@ class HandleConnection {
     });
 
     this.localsocket.on('close', () => {
-      this.localsocket.destroy();
+      this.localsocket.end();
       if (this.remotesocket) {
-        this.remotesocket.destroy();
+        this.remotesocket.end();
       }
     });
 
     this.localsocket.on('error', (err) => {
       console.error(err);
       if (this.remotesocket) {
-        this.remotesocket.destroy();
+        this.remotesocket.end();
       }
     });
 
@@ -153,12 +151,14 @@ class HandleConnection {
     });
 
     this.remotesocket.on('close', (had_error) => {
-      this.localsocket.destroy();
+      this.localsocket.end();
+      this.remotesocket.end();
     });
 
     this.remotesocket.on('error', (err) => {
       console.error(err);
-      this.localsocket.destroy();
+      this.localsocket.end();
+      this.remotesocket.end();
     });
 
   }

@@ -147,7 +147,7 @@ class SNIFilter {
     f['^([^]+\.)?pstatic.net$'] = 'KR';
 
     // 넷플릭스
-    const netflixCountry = 'KR';
+    const netflixCountry = 'JP';
     f['^([^]+\.)?netflix.com$'] = netflixCountry;
     f['^([^]+\.)?fast.com$'] =  netflixCountry;
     f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
