@@ -156,6 +156,11 @@ class SNIFilter {
     f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
     f['^([^]+\.)?nflxso.net$'] = netflixCountry;
     
+    // ..
+    f['^([^]+\.)?microsoft.com$'] = 'US';
+    f['^play.googleapis.com$'] = 'JP';
+    f['^([^]+).kr$'] = 'KR';
+    f['^([^]+).jp$'] = 'KR';
 
   }
 

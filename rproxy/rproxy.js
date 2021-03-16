@@ -19,7 +19,7 @@ if (cluster.isMaster) {
   Nice.Nice();
 
   // Fork workers.
-  for (let i = 0; i < numCPUs * 2; i++) {
+  for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
 

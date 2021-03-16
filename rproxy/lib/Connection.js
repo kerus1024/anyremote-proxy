@@ -2,6 +2,8 @@ const ServerConstants = require(`${process.cwd()}/config.json`);
 
 const net = require('net');
 
+const BASELENGTH = 21;
+
 class Connection {
 
   constructor(localsocket, connectionList, connectionID) {
@@ -50,6 +52,11 @@ class Connection {
         const rTest = regexProxyHead.exec(requestLeft.toString());
   
         if (!rTest) {
+          this.localsocket.end();
+          if (this.remotesocket) {
+            this.remotesocket.end();
+          }
+          delete this.connectionList[this.connectionID];
           throw new Error('Buffer Error!!!!!!!?');
         }
   
@@ -67,35 +74,36 @@ class Connection {
   
         this.remotesocket = new net.Socket();
         this.remotesocket.connect(tcpConnectionOptions);
-        //this.remotesocket.setNoDelay(true);
 
-        // write를 먼저 거는게 연결이 더 빠른듯한..
-        // initBuffer = Buffer.concat([initBuffer, requestRight]);
-        // remotesocket.write(requestRight);
-
-        const currentBufferSize = Buffer.byteLength(requestRight); 
-
-        // TCP bypass DPI
-        const baseLength = 21;
-
-        if (ServerConstants.BYPASSDPI && currentBufferSize >= baseLength) {
-          const sliceLeft = requestRight.slice(0, baseLength);
-          const sliceRight = requestRight.slice(baseLength, currentBufferSize);
-          //this.remotesocket.write(sliceLeft);
-          //this.remotesocket.write(sliceRight);
-          this.initBuffer = Buffer.concat([this.initBuffer, sliceLeft]);
-          this.initBuffer = Buffer.concat([this.initBuffer, sliceRight]);
-        } else {
-          //this.remotesocket.write(requestRight);
-          this.initBuffer = Buffer.concat([this.initBuffer, requestRight]);
-        }
+        this.initBuffer = Buffer.concat([this.initBuffer, requestRight]);
 
         this.initialParseProxy = true;
 
         this.buildRemoteEvent();
 
-      } else if (!this.initialProxy) {
+      } else if (!this.initialProxy && !ServerConstants.BYPASSDPI) {
         this.initBuffer = Buffer.concat([this.initBuffer, data]);
+      } else if (ServerConstants.BYPASSDPI && Buffer.byteLength(data) >= BASELENGTH) {
+        
+        if (this.targetPort == 80) {
+
+          if (/^([A-Z]{3,6})\s\/([^\s]+)\s([^\s]+)(\r)?\nHost\:/.exec(data.toString())) {
+            const currentBufferSize = Buffer.byteLength(data);
+            const sliceLeft = data.slice(0, BASELENGTH);
+            const sliceRight = data.slice(BASELENGTH, currentBufferSize);
+            this.remotesocket.write(sliceLeft);
+            this.remotesocket.write(sliceRight);
+          } else {
+            this.remotesocket.write(data);
+          }
+
+        } else {
+          const flushed = this.remotesocket.write(data);
+          if (!flushed) {
+            this.localsocket.pause();
+          }
+        }
+
       } else {
         const flushed = this.remotesocket.write(data);
         if (!flushed) {
@@ -111,7 +119,9 @@ class Connection {
 
     this.localsocket.on('close', () => {
       this.localsocket.end();
-      this.remotesocket.end();
+      if (this.remotesocket) {
+        this.remotesocket.end();
+      }
       if (typeof this.connectionList[this.connectionID] !== "undefined") {
         delete this.connectionList[this.connectionID];
       }
@@ -120,7 +130,10 @@ class Connection {
     this.localsocket.on('error', (err) => {
       console.error(err);
       this.localsocket.end();
-      this.remotesocket.end();
+      if (this.remotesocket) {
+        this.remotesocket.end();
+      }
+
       if (typeof this.connectionList[this.connectionID] !== "undefined") {
         delete this.connectionList[this.connectionID];
       }
@@ -129,12 +142,37 @@ class Connection {
   }
 
   buildRemoteEvent() {
+
     this.remotesocket.on('connect', (data) => {
+
       this.remotesocket.setNoDelay(true);
 
       if (Buffer.byteLength(this.initBuffer)) {
-        this.remotesocket.write(this.initBuffer);
+
+        const currentBufferSize = Buffer.byteLength(this.initBuffer); 
+
+        // TCP bypass DPI
+
+        if (ServerConstants.BYPASSDPI){ 
+          
+          if (currentBufferSize >= BASELENGTH) {
+            
+            const sliceLeft = this.initBuffer.slice(0, BASELENGTH);
+            const sliceRight = this.initBuffer.slice(BASELENGTH, currentBufferSize);
+            
+            this.remotesocket.write(sliceLeft);
+            this.remotesocket.write(sliceRight);
+
+          } else {
+            this.remotesocket.write(this.initBuffer);
+          }
+
+        } else {
+          this.remotesocket.write(this.initBuffer);
+        }
+
         this.initBuffer = null;
+
       }
 
       this.initialProxy = true;
