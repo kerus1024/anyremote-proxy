@@ -7,6 +7,12 @@ const Conntrack = require('./Conntrack');
 const SNIFilter = require('./SNIFilter');
 const { filter } = require('./SNIFilter');
 
+const wait = (mills) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => { resolve(); }, mills);
+  });
+}
+
 class HandleConnection {
 
   constructor(localsocket) {
@@ -58,8 +64,12 @@ class HandleConnection {
 
       this.remotesocket = new net.Socket();
 
+      // 데이터가 조금 모여야함
+      await wait(1);
+
       // initBuffer가 없으면 동작하지 않는다..
       if (this.targetPort === 443 && ServerConstants.SNIFILTER && Buffer.byteLength(this.initBuffer)) {
+
         const filterResult = await SNIFilter.filter(this.initBuffer);
 
         if (filterResult.filter) {
@@ -136,6 +146,7 @@ class HandleConnection {
         this.remotesocket.write(this.initBuffer);
         this.initBuffer = Buffer.alloc(0);
       }
+
       this.initialProxy = true;
     });
 

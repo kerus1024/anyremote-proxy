@@ -87,7 +87,7 @@ class Connection {
         
         if (this.targetPort == 80) {
 
-          if (/^([A-Z]{3,6})\s\/([^\s]+)\s([^\s]+)(\r)?\nHost\:/.exec(data.toString())) {
+          if (/^([A-Z]{3,6})\s([^\s]+)\s([^\s]+)(\r)?\nHost\:/.exec(data.toString())) {
             const currentBufferSize = Buffer.byteLength(data);
             const sliceLeft = data.slice(0, BASELENGTH);
             const sliceRight = data.slice(BASELENGTH, currentBufferSize);

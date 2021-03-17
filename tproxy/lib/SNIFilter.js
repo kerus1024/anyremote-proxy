@@ -51,8 +51,6 @@ class SNIFilter {
 
   static readSNIHostname(buffer) {
     
-    //console.log('Read SNI');
-
     let pos = 0;
 
     if (buffer[pos] !== 0x16) {
@@ -156,6 +154,11 @@ class SNIFilter {
     f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
     f['^([^]+\.)?nflxso.net$'] = netflixCountry;
     
+    // 유튜브
+    f['^([^]+\.)?ytimg.com$'] = 'KR';
+    f['^([^]+\.)?youtube.com$'] = 'KR';
+    f['^([^]+\.)?googlevideo.com$'] = 'KR';
+
     // ..
     f['^([^]+\.)?microsoft.com$'] = 'US';
     f['^play.googleapis.com$'] = 'JP';
