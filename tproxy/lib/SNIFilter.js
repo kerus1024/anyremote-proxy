@@ -158,12 +158,17 @@ class SNIFilter {
     f['^([^]+\.)?ytimg.com$'] = 'KR';
     f['^([^]+\.)?youtube.com$'] = 'KR';
     f['^([^]+\.)?googlevideo.com$'] = 'KR';
+    f['^([^]+\.)?ggpht.com$'] = 'KR';
+
+    // Google
+    f['^([^]+\.)?gstatic.com$'] = 'JP';
+    f['^([^]+\.)?google.com$'] = 'JP';
 
     // ..
     f['^([^]+\.)?microsoft.com$'] = 'US';
     f['^play.googleapis.com$'] = 'JP';
     f['^([^]+).kr$'] = 'KR';
-    f['^([^]+).jp$'] = 'KR';
+    f['^([^]+).jp$'] = 'JP';
 
   }
 
