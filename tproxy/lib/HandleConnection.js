@@ -90,7 +90,10 @@ class HandleConnection {
       console.log(`NEW PROXY CONNECT - ${this.clientIP}:${this.clientPort} -> ${this.targetIP}:${this.targetPort} [${this.targetGeoRemoteServer} (${this.targetGeoCountry})]`);
 
       this.remotesocket.connect(tcpConnectionOptions);
-      this.remotesocket.write(`KERUSPROXY ${this.targetIP} ${this.targetPort} KERUSPROXYPAD\r\n`);
+      let flushed = this.remotesocket.write(`KERUSPROXY ${this.targetIP} ${this.targetPort} KERUSPROXYPAD\r\n`);
+      if (!flushed) {
+        this.localsocket.pause();
+      }
       this.readyConnect = true;
 
       this.buildRemoteEvent();
@@ -143,7 +146,10 @@ class HandleConnection {
       this.remotesocket.setNoDelay(true);
 
       if (Buffer.byteLength(this.initBuffer)) {
-        this.remotesocket.write(this.initBuffer);
+        let flushed = this.remotesocket.write(this.initBuffer);
+        if (!flushed) {
+          this.localsocket.pause();
+        }
         this.initBuffer = Buffer.alloc(0);
       }
 
@@ -162,6 +168,7 @@ class HandleConnection {
     });
 
     this.remotesocket.on('close', (had_error) => {
+      if (had_error) console.error('closed connection - transmission error');
       this.localsocket.end();
       this.remotesocket.end();
     });

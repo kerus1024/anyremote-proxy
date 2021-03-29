@@ -154,21 +154,21 @@ class SNIFilter {
     f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
     f['^([^]+\.)?nflxso.net$'] = netflixCountry;
     
-    // 유튜브
-    f['^([^]+\.)?ytimg.com$'] = 'KR';
-    f['^([^]+\.)?youtube.com$'] = 'KR';
-    f['^([^]+\.)?googlevideo.com$'] = 'KR';
-    f['^([^]+\.)?ggpht.com$'] = 'KR';
-
-    // Google
-    f['^([^]+\.)?gstatic.com$'] = 'JP';
-    f['^([^]+\.)?google.com$'] = 'JP';
+    // 유튜브, Google
+    f['^([^]+\.)?ytimg.com$'] = 'US';
+    f['^([^]+\.)?youtube.com$'] = 'US';
+    f['^([^]+\.)?googlevideo.com$'] = 'US';
+    f['^([^]+\.)?ggpht.com$'] = 'US';
+    f['^([^]+\.)?gstatic.com$'] = 'US';
+    f['^([^]+\.)?google.com$'] = 'US';
 
     // ..
     f['^([^]+\.)?microsoft.com$'] = 'US';
     f['^play.googleapis.com$'] = 'JP';
     f['^([^]+).kr$'] = 'KR';
     f['^([^]+).jp$'] = 'JP';
+
+    f['^([^]+).onstove.com$'] = 'KR';
 
   }
 

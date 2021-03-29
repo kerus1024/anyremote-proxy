@@ -23,8 +23,12 @@ if (cluster.isMaster) {
     cluster.fork();
   }
 
+  cluster.on('error', (error) => {
+    console.error(error);
+  });
+
   cluster.on('exit', (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died`);
+    console.log(`worker ${worker.process.pid} dead`);
     cluster.fork();
   });
 
@@ -43,4 +47,5 @@ if (cluster.isMaster) {
   server.listen(ServerConstants.LISTENPORT, ServerConstants.LISTENIP, () => {    
     console.log('server listening to %j', server.address());  
   });
+
 }

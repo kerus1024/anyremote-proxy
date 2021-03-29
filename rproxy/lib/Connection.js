@@ -94,18 +94,21 @@ class Connection {
             this.remotesocket.write(sliceLeft);
             this.remotesocket.write(sliceRight);
           } else {
-            this.remotesocket.write(data);
+            let flushed = this.remotesocket.write(data);
+            if (!flushed) {
+              this.localsocket.pause();
+            }
           }
 
         } else {
-          const flushed = this.remotesocket.write(data);
+          let flushed = this.remotesocket.write(data);
           if (!flushed) {
             this.localsocket.pause();
           }
         }
 
       } else {
-        const flushed = this.remotesocket.write(data);
+        let flushed = this.remotesocket.write(data);
         if (!flushed) {
           this.localsocket.pause();
         }
@@ -145,7 +148,9 @@ class Connection {
 
     this.remotesocket.on('connect', (data) => {
 
-      this.remotesocket.setNoDelay(true);
+      if (ServerConstants.BYPASSDPI || ServerConstants.NODELAY) {
+        this.remotesocket.setNoDelay(true);
+      }
 
       if (Buffer.byteLength(this.initBuffer)) {
 
@@ -164,11 +169,15 @@ class Connection {
             this.remotesocket.write(sliceRight);
 
           } else {
+
             this.remotesocket.write(this.initBuffer);
+
           }
 
         } else {
+
           this.remotesocket.write(this.initBuffer);
+          
         }
 
         this.initBuffer = null;
@@ -190,7 +199,8 @@ class Connection {
       this.localsocket.resume();
     });
 
-    this.remotesocket.on('close', () => {
+    this.remotesocket.on('close', (had_error) => {
+      if (had_error) console.error('closed connection - transmission error');
       this.localsocket.end();
       this.remotesocket.end();
       if (typeof this.connectionList[this.connectionID] !== "undefined") {
