@@ -52,9 +52,9 @@ class Connection {
         const rTest = regexProxyHead.exec(requestLeft.toString());
   
         if (!rTest) {
-          this.localsocket.end();
+          this.localsocket.destroy();
           if (this.remotesocket) {
-            this.remotesocket.end();
+            this.remotesocket.destroy();
           }
           delete this.connectionList[this.connectionID];
           throw new Error('Buffer Error!!!!!!!?');
@@ -121,9 +121,9 @@ class Connection {
     });
 
     this.localsocket.on('close', () => {
-      this.localsocket.end();
+      this.localsocket.destroy();
       if (this.remotesocket) {
-        this.remotesocket.end();
+        this.remotesocket.destroy();
       }
       if (typeof this.connectionList[this.connectionID] !== "undefined") {
         delete this.connectionList[this.connectionID];
@@ -132,14 +132,16 @@ class Connection {
 
     this.localsocket.on('error', (err) => {
       console.error(err);
-      this.localsocket.end();
+      this.localsocket.destroy();
       if (this.remotesocket) {
-        this.remotesocket.end();
+        this.remotesocket.destroy();
       }
 
       if (typeof this.connectionList[this.connectionID] !== "undefined") {
         delete this.connectionList[this.connectionID];
       }
+
+      global.gc();
     });
 
   }
@@ -201,8 +203,8 @@ class Connection {
 
     this.remotesocket.on('close', (had_error) => {
       if (had_error) console.error('closed connection - transmission error');
-      this.localsocket.end();
-      this.remotesocket.end();
+      this.localsocket.destroy();
+      this.remotesocket.destroy();
       if (typeof this.connectionList[this.connectionID] !== "undefined") {
         delete this.connectionList[this.connectionID];
       }
@@ -210,11 +212,12 @@ class Connection {
 
     this.remotesocket.on('error', (err) => {
       console.error(err);
-      this.localsocket.end();
-      this.remotesocket.end();
+      this.localsocket.destroy();
+      this.remotesocket.destroy();
       if (typeof this.connectionList[this.connectionID] !== "undefined") {
         delete this.connectionList[this.connectionID];
       }
+      global.gc();
     });
 
   }

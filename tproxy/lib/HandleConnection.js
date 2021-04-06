@@ -100,7 +100,7 @@ class HandleConnection {
 
     } catch (e) {
       console.error(e);
-      this.localsocket.end();
+      this.localsocket.destroy();
     }
 
   }
@@ -125,17 +125,18 @@ class HandleConnection {
     });
 
     this.localsocket.on('close', () => {
-      this.localsocket.end();
+      this.localsocket.destroy();
       if (this.remotesocket) {
-        this.remotesocket.end();
+        this.remotesocket.destroy();
       }
     });
 
     this.localsocket.on('error', (err) => {
       console.error(err);
       if (this.remotesocket) {
-        this.remotesocket.end();
+        this.remotesocket.destroy();
       }
+      global.gc();
     });
 
   }
@@ -169,14 +170,15 @@ class HandleConnection {
 
     this.remotesocket.on('close', (had_error) => {
       if (had_error) console.error('closed connection - transmission error');
-      this.localsocket.end();
-      this.remotesocket.end();
+      this.localsocket.destroy();
+      this.remotesocket.destroy();
     });
 
     this.remotesocket.on('error', (err) => {
       console.error(err);
-      this.localsocket.end();
-      this.remotesocket.end();
+      this.localsocket.destroy();
+      this.remotesocket.destroy();
+      global.gc();
     });
 
   }

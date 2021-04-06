@@ -13,6 +13,11 @@ const server = net.createServer();
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 
+if (!global.gc) {
+  console.log('GC Required. Run as --expose-gc');
+  process.exit(1);
+}
+
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
@@ -47,5 +52,7 @@ if (cluster.isMaster) {
   server.listen(ServerConstants.LISTENPORT, ServerConstants.LISTENIP, () => {    
     console.log('server listening to %j', server.address());  
   });
+
+  setTimeout(()=> { global.gc(); }, 60000);
 
 }
