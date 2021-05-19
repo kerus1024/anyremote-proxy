@@ -24,7 +24,7 @@ class Conntrack {
 
         const data = fs.readFileSync(CONNTRACK_PATH);
 
-        let findRegex = `([a-z0-9]+)[\\s\\t]+([0-4]+)[\\s\\t]+([a-z0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+[^\\n]+src\=${clientIP}\\sdst=([0-9\.]+)\\ssport\\=${clientPort}\\sdport\\=([0-9]+)\\ssrc\\=[0-9\.]+\\sdst\\=${clientIP}\\ssport\\=${ServerConstants.LISTENPORT}\\sdport\\=${clientPort}[^\\n]+`;
+        let findRegex = `([a-z0-9]+)[\\s\\t]+([0-4]+)[\\s\\t]+([a-z0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+[^\\n]+src\=${clientIP}\\sdst=([0-9\.]+)\\ssport\\=[0-9]+\\sdport\\=([0-9]+)\\ssrc\\=[0-9\.]+\\sdst\\=${clientIP}\\ssport\\=${ServerConstants.LISTENPORT}\\sdport\\=${clientPort}[^\\n]+`;
 
         const regexRun = new RegExp(findRegex).exec(data);
 
@@ -54,6 +54,8 @@ class Conntrack {
 
           console.error(`Couldn't retrieve conntrack data. ${clientIP}:${clientPort}`);
 
+          await wait(1);
+
           child_process.exec(`cat ${CONNTRACK_PATH}`, (error, stdout, stderr) => {
             
             const regexRun2 = new RegExp(findRegex).exec(stdout);
@@ -76,7 +78,12 @@ class Conntrack {
               });
 
             } else {
+              console.error(`Conntrack: Retry Failed. ${clientIP}:${clientPort} -> ????`)
               reject();
+              if (error) {
+                console.error(error);
+                console.error(stderr);
+              }
             }
 
             
