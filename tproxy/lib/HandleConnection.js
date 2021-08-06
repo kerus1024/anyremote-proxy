@@ -43,10 +43,8 @@ class HandleConnection {
 
     this.readyConnect = false;
 
-    (async() => {
-      this.initConnection();
-      this.buildLocalEvent();      
-    })();
+    this.buildLocalEvent();  
+    this.initConnection();
 
   }
 
@@ -65,7 +63,7 @@ class HandleConnection {
       this.remotesocket = new net.Socket();
 
       // 데이터가 조금 모여야함
-      await wait(1);
+      //await wait(1);
 
       // initBuffer가 없으면 동작하지 않는다..
       if (this.targetPort === 443 && ServerConstants.SNIFILTER && Buffer.byteLength(this.initBuffer)) {
@@ -105,7 +103,7 @@ class HandleConnection {
 
   }
 
-  async buildLocalEvent() {
+  buildLocalEvent() {
 
     this.localsocket.on('data', (data) => {
 
@@ -141,7 +139,7 @@ class HandleConnection {
 
   }
 
-  async buildRemoteEvent() {
+  buildRemoteEvent() {
 
     this.remotesocket.on('connect', () => {
       this.remotesocket.setNoDelay(true);

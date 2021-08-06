@@ -134,41 +134,9 @@ class SNIFilter {
 
     const f = SNIFilter.filters;
 
-    // Twitter, Facebook
-    f['^([^]+\.)?twitter.com$'] = 'JP';
-    f['^([^]+\.)?t.co$'] = 'JP';
-    f['^([^]+\.)?twimg.com$'] = 'JP';
-    f['^([^]+\.)?facebook.com$'] = 'JP';
-    f['^([^]+\.)?fbcdn.net$'] = 'JP';
-    
-    // 네이버
-    f['^([^]+\.)?pstatic.net$'] = 'KR';
-
-    // 넷플릭스
-    const netflixCountry = 'JP';
-    f['^([^]+\.)?netflix.com$'] = netflixCountry;
-    f['^([^]+\.)?fast.com$'] =  netflixCountry;
-    f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
-    f['^([^]+\.)?nflximg.net$'] =  netflixCountry;
-    f['^([^]+\.)?nflxext.com$'] =  netflixCountry;
-    f['^([^]+\.)?nflxvideo.net$'] =  netflixCountry;
-    f['^([^]+\.)?nflxso.net$'] = netflixCountry;
-    
-    // 유튜브, Google
-    f['^([^]+\.)?ytimg.com$'] = 'US';
-    f['^([^]+\.)?youtube.com$'] = 'US';
-    f['^([^]+\.)?googlevideo.com$'] = 'US';
-    f['^([^]+\.)?ggpht.com$'] = 'US';
-    f['^([^]+\.)?gstatic.com$'] = 'US';
-    f['^([^]+\.)?google.com$'] = 'US';
-
     // ..
-    f['^([^]+\.)?microsoft.com$'] = 'US';
-    f['^play.googleapis.com$'] = 'JP';
     f['^([^]+).kr$'] = 'KR';
     f['^([^]+).jp$'] = 'JP';
-
-    f['^([^]+).onstove.com$'] = 'KR';
 
   }
 

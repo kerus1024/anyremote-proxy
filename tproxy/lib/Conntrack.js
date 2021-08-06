@@ -5,6 +5,9 @@ const fs = require('fs');
 
 const CONNTRACK_PATH = '/proc/net/nf_conntrack';
 
+const util = require('util');
+fs.readFileAsync = util.promisify(fs.readFile);
+
 const wait = (time_milliseconds) => { return new Promise((resolve) => { setTimeout(() => { resolve(); }, time_milliseconds) }) };
 
 class Conntrack {
@@ -16,48 +19,44 @@ class Conntrack {
     return: Promise ( originIP: <originIP>, originPort: <originPort> )
   */
 
-  static getOriginDestinationTCP(clientIP, clientPort) {
+  static async getOriginDestinationTCP(clientIP, clientPort) {
 
-    return new Promise(async (resolve, reject) => {
-        
-      try {
+    try {
+      const data = await fs.readFileAsync(CONNTRACK_PATH);
 
-        const data = fs.readFileSync(CONNTRACK_PATH);
+      let findRegex = `([a-z0-9]+)[\\s\\t]+([0-4]+)[\\s\\t]+([a-z0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+[^\\n]+src\=${clientIP}\\sdst=([0-9\.]+)\\ssport\\=[0-9]+\\sdport\\=([0-9]+)\\ssrc\\=[0-9\.]+\\sdst\\=${clientIP}\\ssport\\=${ServerConstants.LISTENPORT}\\sdport\\=${clientPort}[^\\n]+`;
 
-        let findRegex = `([a-z0-9]+)[\\s\\t]+([0-4]+)[\\s\\t]+([a-z0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+([0-9]+)[\\s\\t]+[^\\n]+src\=${clientIP}\\sdst=([0-9\.]+)\\ssport\\=[0-9]+\\sdport\\=([0-9]+)\\ssrc\\=[0-9\.]+\\sdst\\=${clientIP}\\ssport\\=${ServerConstants.LISTENPORT}\\sdport\\=${clientPort}[^\\n]+`;
+      const regexRun = new RegExp(findRegex).exec(data);
 
-        const regexRun = new RegExp(findRegex).exec(data);
+      let layer3protoStr = '';
+      let layer3proto = -1;
+      let layer4protoStr = '';
+      let layer4proto = -1;
+      let conntrackDeadtime = -1;
+      let originIP = '';
+      let originPort = -1;
 
-        let layer3protoStr = '';
-        let layer3proto = -1;
-        let layer4protoStr = '';
-        let layer4proto = -1;
-        let conntrackDeadtime = -1;
-        let originIP = '';
-        let originPort = -1;
+      if (regexRun) {
+        layer3protoStr      = regexRun[1];
+        layer3proto         = parseInt(regexRun[2]);
+        layer4protoStr      = regexRun[3];
+        layer4proto         = parseInt(regexRun[4]);
+        conntrackDeadtime   = parseInt(regexRun[5]);
+        originIP            = regexRun[6];
+        originPort          = parseInt(regexRun[7]);
 
-        if (regexRun) {
-          layer3protoStr      = regexRun[1];
-          layer3proto         = parseInt(regexRun[2]);
-          layer4protoStr      = regexRun[3];
-          layer4proto         = parseInt(regexRun[4]);
-          conntrackDeadtime   = parseInt(regexRun[5]);
-          originIP            = regexRun[6];
-          originPort          = parseInt(regexRun[7]);
+        return {
+          originIP: originIP,
+          originPort: originPort
+        }
 
-          resolve({
-            originIP: originIP,
-            originPort: originPort
-          });
+      } else {
 
-        } else {
+        console.error(`Couldn't retrieve conntrack data. ${clientIP}:${clientPort}`);
 
-          console.error(`Couldn't retrieve conntrack data. ${clientIP}:${clientPort}`);
-
-          await wait(1);
-
+        return await new Promise ((resolve, reject) => {
           child_process.exec(`cat ${CONNTRACK_PATH}`, (error, stdout, stderr) => {
-            
+          
             const regexRun2 = new RegExp(findRegex).exec(stdout);
 
             if (regexRun2) {
@@ -86,21 +85,18 @@ class Conntrack {
               }
             }
 
-            
           });
 
-        }
-
-      } catch (e) {
-        console.error(`Couldn't retrieve conntrack data. ${clientIP}:${clientPort}`);
-        console.error('Conntrack ERR: ', e);
-        reject();
+        });
       }
 
-    });
-  
-  }
+    } catch (e) {
+      console.error(`Couldn't retrieve conntrack data. ${clientIP}:${clientPort}`);
+      console.error('Conntrack ERR: ', e);
+      reject();
+    }
 
+  }
 
 }
 
